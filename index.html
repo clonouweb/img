@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Imagens - Vigor Natural</title>
+</head>
+<body>
+    <h1>Upload de Imagens - Vigor Natural</h1>
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="uploadImage()">Upload</button>
+    <p id="status"></p>
+    <p id="link"></p>
+    
+    <script>
+        async function uploadImage() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Por favor, selecione uma imagem para fazer o upload.');
+                return;
+            }
+            
+            const repo = 'vigor-natural-images';
+            const username = 'SEU_USUARIO_GITHUB';
+            const token = 'SEU_TOKEN_DE_ACESSO_GITHUB';
+            
+            const base64 = await toBase64(file);
+            const path = `images/${file.name}`;
+            const url = `https://api.github.com/repos/${username}/${repo}/contents/${path}`;
+            
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `Upload de ${file.name}`,
+                    content: base64.split(',')[1]
+                })
+            });
+            
+            if (response.ok) {
+                document.getElementById('status').innerText = 'Upload bem-sucedido!';
+                document.getElementById('link').innerHTML = `<a href="https://${username}.github.io/${repo}/images/${file.name}" target="_blank">Link da Imagem</a>`;
+            } else {
+                document.getElementById('status').innerText = 'Falha no upload.';
+            }
+        }
+        
+        function toBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+    </script>
+</body>
+</html>
